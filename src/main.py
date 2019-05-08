@@ -3,6 +3,8 @@ variables = {}
 operators = {}
 keywords = {}
 
+curline = 0
+
 
 def interperet(inputcode):
     tokens = inputcode.split(" ")
@@ -13,8 +15,8 @@ def interperet(inputcode):
     if len(tokens) > 1:
         if tokens[1] in operators:
             if len(tokens) > 3:
-                return interperet(operators[tokens[1]](int(interperet(tokens[0])), int(interperet(tokens[2]))) + " " + inputcode[len(tokens[0]) + len(tokens[2]) + 4:])
-            return interperet(operators[tokens[1]](int(interperet(tokens[0])), int(interperet(tokens[2]))))
+                return interperet(operators[tokens[1]](interperet(tokens[0]), interperet(tokens[2])) + " " + inputcode[len(tokens[0]) + len(tokens[2]) + 4:])
+            return interperet(operators[tokens[1]](interperet(tokens[0]), interperet(tokens[2])))
 
     if tokens[0] in variables:
         if len(tokens) > 1:
@@ -28,23 +30,31 @@ def interperet(inputcode):
 
 
 def add(a, b):
-    return str(a + b)
+    return str(int(a) + int(b))
 
 
 def subtract(a, b):
-    return str(a - b)
+    return str(int(a) - int(b))
 
 
 def multiply(a, b):
-    return str(a * b)
+    return str(int(a) * int(b))
 
 
 def divide(a, b):
-    return str(int(a / b))
+    return str(int(int(a) / int(b)))
 
 
 def modulo(a, b):
-    return str(int(a % b))
+    return str(int(a) % int(b))
+
+
+def equals(a, b):
+    return str(a == b)
+
+
+def notequal(a, b):
+    return str(a != b)
 
 
 def output(a):
@@ -52,12 +62,18 @@ def output(a):
 
 
 def textin(a):
+    if a == "":
+        return input()
     return input() + " " + a
 
 
 def setvar(a):
     tokens = a.split(" ")
-    variables[tokens[0]] = interperet(a[len(tokens[0]) + 1:])
+
+    name = tokens[0]
+    value = interperet(a[len(tokens[0]) + 1:])
+
+    variables[name] = value
 
 
 def callfunc(a):
@@ -74,6 +90,19 @@ def literal(a):
     return tokens[0]
 
 
+def literally(a):
+    return a
+
+
+def jump(a):
+    tokens = a.split(" ")
+
+    global curline
+
+    if interperet(a[len(tokens[0]) + 1:]).upper() == "TRUE":
+        curline = int(interperet(tokens[0])) - 2
+
+
 def main():
     operators["+"] = add
     operators["-"] = subtract
@@ -81,11 +110,16 @@ def main():
     operators["/"] = divide
     operators["%"] = modulo
 
+    operators["EQUALS"] = equals
+    operators["NEQUALS"] = notequal
+
     keywords["PRINT"] = output
     keywords["IN"] = textin
     keywords["SET"] = setvar
     keywords["FUNC"] = callfunc
     keywords["LITERAL"] = literal
+    keywords["LITERALLY"] = literally
+    keywords["JUMP"] = jump
 
     f = open("input.txt", "r")
 
@@ -95,8 +129,12 @@ def main():
 
     lines = s.split("\n")
 
-    for i in range(0, len(lines)):
-        interperet(lines[i])
+    linecount = len(lines)
+    global curline
+
+    while curline < linecount:
+        interperet(lines[curline])
+        curline += 1
 
 
 main()
